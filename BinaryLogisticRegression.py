@@ -1,8 +1,11 @@
 from __future__ import print_function
 import math
 import random
+
+import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 """
 This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
@@ -68,14 +71,19 @@ class BinaryLogisticRegression(object):
         :param      x:    The input features
         :param      y:    The correct labels
         """
-        # REPLACE THE COMMAND BELOW WITH YOUR CODE
-
-        return 0
+        wrongLabels = 0
+        sum = 0
+        for i in range (self.DATAPOINTS):
+            sigmoidVal = self.sigmoid(np.dot(self.theta, x[i,:]))
+            sum += -y[i]*math.log(sigmoidVal)-(1-y[i])*math.log(1-sigmoidVal)
+        loss = sum/self.DATAPOINTS
+        return loss
 
     def sigmoid(self, z):
         """
         The logistic function.
         """
+        #print(z)
         return 1.0 / (1 + math.exp(-z))
 
     def conditional_prob(self, label, datapoint):
@@ -83,9 +91,9 @@ class BinaryLogisticRegression(object):
         Computes the conditional probability P(label|datapoint)
         """
 
-        # print(datapoint)
-        # print(self.theta)
-        p = self.sigmoid(np.dot(self.theta, datapoint) + self.theta[0])
+        #print(datapoint)
+        #print(self.theta)
+        p = self.sigmoid(np.dot(self.theta, self.x[datapoint, :]) + self.theta[0])
         if label == 1:
             return p
 
@@ -99,7 +107,34 @@ class BinaryLogisticRegression(object):
         (used for batch gradient descent).
         """
 
-        # YOUR CODE HERE
+        convergence = False
+        loops = 0
+        while not convergence:
+            loops += 1
+            for k in range(self.FEATURES):
+                sum = 0
+                for i in range(self.DATAPOINTS):
+                    sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
+                self.gradient[k] = sum / self.DATAPOINTS
+
+            convergence = self.checkConvergence()
+
+            for k in range(self.FEATURES):
+                self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
+
+            if loops == 50:
+                loss = self.loss(self.x, self.y)
+                print(loss)
+                self.update_plot(loss)
+
+                loops = 0
+
+    def checkConvergence(self):
+        sumOfSquares = np.sum(self.gradient ** 2)
+        #print(sumOfSquares)
+        if sumOfSquares < self.CONVERGENCE_MARGIN:
+            return True
+        return False
 
     def compute_gradient_minibatch(self, minibatch):
         """
@@ -107,13 +142,28 @@ class BinaryLogisticRegression(object):
         (used for minibatch gradient descent).
         """
 
-        # YOUR CODE HERE
+        for k in range(self.FEATURES):
+            sum = 0
+            for i in minibatch:
+                sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
+            self.gradient[k] = sum / len(minibatch)
+
+        for k in range(self.FEATURES):
+            self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
 
     def compute_gradient(self, datapoint):
         """
         Computes the gradient based on a single datapoint
         (used for stochastic gradient descent).
         """
+
+        for k in range(self.FEATURES):
+            self.gradient[k] = self.x[datapoint][k] * (self.sigmoid(np.dot(self.theta, self.x[datapoint, :])) - self.y[datapoint])
+
+        for k in range(self.FEATURES):
+            self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
+
+
 
         # YOUR CODE HERE
 
@@ -122,7 +172,17 @@ class BinaryLogisticRegression(object):
         Performs Stochastic Gradient Descent.
         """
         self.init_plot(self.FEATURES)
-
+        convergence = False
+        loops = 0
+        while not convergence:
+            loops += 1
+            i = random.randrange(0, self.DATAPOINTS)
+            self.compute_gradient(i)
+            convergence = self.checkConvergence()
+            if loops == 100:
+                loops = 0
+                loss = self.loss(self.x, self.y)
+                self.update_plot(loss)
         # YOUR CODE HERE
 
     def minibatch_fit(self):
@@ -130,32 +190,27 @@ class BinaryLogisticRegression(object):
         Performs Mini-batch Gradient Descent.
         """
         self.init_plot(self.FEATURES)
+        convergence = False
+        loops = 0
+        while not convergence:
 
-        # YOUR CODE HERE
+            loops += 1
+            minibatch = random.sample(range(0, self.DATAPOINTS), 100)
+            self.compute_gradient_minibatch(minibatch)
+            convergence = self.checkConvergence()
+            #print(convergence)
+            #print(loops)
+            # if loops == 100:
+            #     loops = 0
+            #     loss = self.loss(self.x, self.y)
+            #     self.update_plot(loss)
 
     def fit(self):
         """
         Performs Batch Gradient Descent
         """
         self.init_plot(self.FEATURES)
-
-        convergence = False
-        while not convergence:
-            sumOfSquares = 0
-            for k in range(self.FEATURES):
-                sum = 0
-                for i in range(self.DATAPOINTS):
-                    sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y)
-                self.gradient[k] = sum / self.DATAPOINTS
-                sumOfSquares += self.gradient[k] ^ 2
-
-            if sumOfSquares < self.CONVERGENCE_MARGIN:
-                convergence = True
-
-            self.update_plot(self.loss(self.x, self.y))
-
-            for k in range(self.FEATURES):
-                self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
+        self.compute_gradient_for_all()
 
     def classify_datapoints(self, test_data, test_labels):
         """
@@ -170,7 +225,7 @@ class BinaryLogisticRegression(object):
         self.x = np.concatenate((np.ones((self.DATAPOINTS, 1)), np.array(test_data)), axis=1)
         self.y = np.array(test_labels)
         confusion = np.zeros((self.FEATURES, self.FEATURES))
-
+        #print(self.DATAPOINTS)
         for d in range(self.DATAPOINTS):
             prob = self.conditional_prob(1, d)
             predicted = 1 if prob > .5 else 0
