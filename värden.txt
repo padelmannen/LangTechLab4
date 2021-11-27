@@ -1,0 +1,14 @@
+Mini batch:
+Accuracy: 95,9%
+Precision: 96,3%
+Recall: 98,9%
+
+Stochastic
+Accuracy: 93,9%
+Precision: 97,6%
+Recall: 95,2%
+
+Batch:
+Accuracy:
+Precision:
+Recall:
