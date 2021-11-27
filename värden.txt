@@ -1,14 +1,46 @@
+No name:
+
 Mini batch:
 Accuracy: 95,9%
 Precision: 96,3%
 Recall: 98,9%
+
+Fscore: 0.976
 
 Stochastic
 Accuracy: 93,9%
 Precision: 97,6%
 Recall: 95,2%
 
-Batch:
-Accuracy:
-Precision:
-Recall:
+Fscore: 0.964
+
+Batch (0.1 speed):
+Accuracy: 95,9%
+Precision: 96,3%
+Recall: 98,9%
+
+Fscore: 0.976
+
+
+Name:
+
+Mini batch:
+Accuracy: 95,9%
+Precision: 93,2%
+Recall: 78,8%
+
+Fscore: 0.854
+
+Stochastic
+Accuracy: 93,9%
+Precision: 76,7%
+Recall: 86,9%
+
+Fscore: 0.814
+
+Batch (0.1 speed):
+Accuracy: 95,9%
+Precision: 93,2%
+Recall: 78,8%
+
+Fscore: 0.854
