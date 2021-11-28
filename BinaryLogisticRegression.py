@@ -4,7 +4,6 @@ import random
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 """
 This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
 Created 2017 by Johan Boye, Patrik Jonell and Dmytro Kalpakchi.
@@ -23,7 +22,7 @@ class BinaryLogisticRegression(object):
     CONVERGENCE_MARGIN = 0.001  # The convergence criterion.
     MAX_ITERATIONS = 100  # Maximal number of passes through the datapoints in stochastic gradient descent.
     MINIBATCH_SIZE = 1000  # Minibatch size (only for minibatch gradient descent)
-
+    ALPHA = 0
     # ----------------------------------------------------------------------
 
     def __init__(self, x=None, y=None, theta=None):
@@ -60,6 +59,9 @@ class BinaryLogisticRegression(object):
             # The current gradient.
             self.gradient = np.zeros(self.FEATURES)
 
+
+
+
     # ----------------------------------------------------------------------
 
     def loss(self, x, y):
@@ -72,8 +74,10 @@ class BinaryLogisticRegression(object):
         sum = 0
         for i in range(self.DATAPOINTS):
             sigmoidVal = self.sigmoid(np.dot(self.theta, x[i, :]))
-            sum += -y[i]*math.log(sigmoidVal)-(1-y[i])*math.log(1-sigmoidVal)
-        loss = sum/self.DATAPOINTS
+            sum += -y[i] * math.log(sigmoidVal) - (1 - y[i]) * math.log(1 - sigmoidVal)
+
+        loss = sum / self.DATAPOINTS
+        loss = loss + self.ALPHA * np.sum(self.theta ** 2)
         return loss
 
     def sigmoid(self, z):
@@ -90,7 +94,6 @@ class BinaryLogisticRegression(object):
         p = self.sigmoid(np.dot(self.theta, self.x[datapoint, :]))
         if label == 1:
             return p
-
         else:
             return 1 - p
 
@@ -101,25 +104,15 @@ class BinaryLogisticRegression(object):
         (used for batch gradient descent).
         """
 
-        convergence = False
-        loops = 0
-        while not convergence:
-            loops += 1
-            for k in range(self.FEATURES):
-                sum = 0
-                for i in range(self.DATAPOINTS):
-                    sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
-                self.gradient[k] = sum / self.DATAPOINTS
+        for k in range(self.FEATURES):
+            sum = 0
+            for i in range(self.DATAPOINTS):
+                sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
 
-            convergence = self.checkConvergence()
+            self.gradient[k] = sum / self.DATAPOINTS + 2*self.ALPHA*self.theta[k]
 
-            for k in range(self.FEATURES):
-                self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
-
-            # if loops == 100:
-            #     loops = 0
-            #     loss = self.loss(self.x, self.y)
-            #     self.update_plot(loss)
+        for k in range(self.FEATURES):
+            self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
 
     def checkConvergence(self):
         sumOfSquares = np.sum(self.gradient ** 2)
@@ -136,9 +129,9 @@ class BinaryLogisticRegression(object):
 
         for k in range(self.FEATURES):
             sum = 0
-            for i in minibatch:   #looping over our batch of datapoints
+            for i in minibatch:  # looping over our batch of datapoints
                 sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
-            self.gradient[k] = sum / len(minibatch)
+            self.gradient[k] = sum / len(minibatch) + 2*self.ALPHA*self.theta[k]
 
         for k in range(self.FEATURES):
             self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
@@ -150,7 +143,8 @@ class BinaryLogisticRegression(object):
         """
 
         for k in range(self.FEATURES):
-            self.gradient[k] = self.x[datapoint][k] * (self.sigmoid(np.dot(self.theta, self.x[datapoint, :])) - self.y[datapoint])
+            self.gradient[k] = self.x[datapoint][k] * (
+                        self.sigmoid(np.dot(self.theta, self.x[datapoint, :])) - self.y[datapoint]) + 2*self.ALPHA*self.theta[k]
 
         for k in range(self.FEATURES):
             self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
@@ -164,9 +158,9 @@ class BinaryLogisticRegression(object):
         loops = 0
         while not convergence:
             loops += 1
-            i = random.randrange(0, self.DATAPOINTS)  #random datapoint for fit
-            self.compute_gradient(i)
-            convergence = self.checkConvergence()   #True or False
+            datapoint = random.randrange(0, self.DATAPOINTS - 1)  # random datapoint for fit
+            self.compute_gradient(datapoint)
+            convergence = self.checkConvergence()  # True or False
             # if loops == 50:
             #     loops = 0
             #     loss = self.loss(self.x, self.y)      ##if we want to plot the decrease of loss
@@ -182,9 +176,9 @@ class BinaryLogisticRegression(object):
         loops = 0
         while not convergence:
             loops += 1
-            minibatch = random.sample(range(0, self.DATAPOINTS), 100)  #100 random Datapoints
+            minibatch = random.sample(range(0, self.DATAPOINTS - 1), self.MINIBATCH_SIZE)  # 1000 random Datapoints
             self.compute_gradient_minibatch(minibatch)
-            convergence = self.checkConvergence()   #True or False
+            convergence = self.checkConvergence()  # True or False
             # if loops == 100:
             #     loops = 0
             #     loss = self.loss(self.x, self.y)      ##if we want to plot the decrease of loss
@@ -197,7 +191,18 @@ class BinaryLogisticRegression(object):
         Performs Batch Gradient Descent
         """
         self.init_plot(self.FEATURES)
-        self.compute_gradient_for_all()
+        convergence = False
+        loops = 0
+        while not convergence:
+            loops += 1
+            self.compute_gradient_for_all()
+            convergence = self.checkConvergence()
+
+            # if loops == 100:
+            #     loops = 0
+            #     loss = self.loss(self.x, self.y)
+            #     self.update_plot(loss)
+        print(self.loss(self.x, self.y))
 
     def classify_datapoints(self, test_data, test_labels):
         """
@@ -214,7 +219,7 @@ class BinaryLogisticRegression(object):
         confusion = np.zeros((self.FEATURES, self.FEATURES))
         for d in range(self.DATAPOINTS):
             prob = self.conditional_prob(1, d)
-            #print(prob)
+            # print(prob)
             predicted = 1 if prob > .5 else 0
             confusion[predicted][self.y[d]] += 1
 
