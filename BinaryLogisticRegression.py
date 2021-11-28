@@ -138,7 +138,7 @@ class BinaryLogisticRegression(object):
                 i = random.randint(1, self.DATAPOINTS)
                 sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
 
-                self.gradient[k] = (1 / self.DATAPOINTS) * sum
+                self.gradient[k] = sum
                 curErr += self.gradient[k] ** 2
 
             self.update_plot(self.loss(self.x, self.y))
