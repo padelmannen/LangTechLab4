@@ -1,8 +1,6 @@
 from __future__ import print_function
 import math
 import random
-
-import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -205,7 +203,7 @@ class BinaryLogisticRegression(object):
         """
         Classifies datapoints
         """
-        print('Model parameters:');
+        print('Model parameters:')
 
         print('  '.join('{:d}: {:.4f}'.format(k, self.theta[k]) for k in range(self.FEATURES)))
 
