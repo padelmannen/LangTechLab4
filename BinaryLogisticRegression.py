@@ -73,6 +73,7 @@ class BinaryLogisticRegression(object):
         for i in range(self.DATAPOINTS):
             sigmoid = self.sigmoid(np.dot(self.theta, x[i, :]))
             sum += -y[i] * math.log(sigmoid) - (1 - y[i]) * math.log(1 - sigmoid)
+        # sum -= np.sum(self.theta)
 
         loss = (1 / self.DATAPOINTS) * sum
         return loss
@@ -90,7 +91,7 @@ class BinaryLogisticRegression(object):
 
         # REPLACE THE COMMAND BELOW WITH YOUR CODE
         print(datapoint)
-        prob = self.sigmoid(datapoint)
+        prob = self.sigmoid(np.dot(self.theta, self.x[datapoint, :]))
 
         if label == 1:
             return prob
@@ -130,18 +131,21 @@ class BinaryLogisticRegression(object):
         # YOUR CODE HERE
 
         # convergence = False           # repetera ett fixt antal gånger eller tills konvergens
-        # while not convergence:
+        # while not convergence:a
+        counter = 0
         for iterations in range(self.DATAPOINTS * 10):
-            curErr = 0
+            # curErr = 0
+            counter += 1
             for k in range(self.FEATURES):
-                sum = 0
-                i = random.randint(1, self.DATAPOINTS)
-                sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
 
-                self.gradient[k] = sum
-                curErr += self.gradient[k] ** 2
+                i = random.randint(0, self.DATAPOINTS-1)
+                self.gradient[k] = self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
 
-            self.update_plot(self.loss(self.x, self.y))
+                # curErr += self.gradient[k] ** 2
+
+            # if counter == 100:
+            #     counter = 0
+            #     self.update_plot(self.loss(self.x, self.y))
 
             # if curErr < self.CONVERGENCE_MARGIN:
             # convergence = True
@@ -158,24 +162,24 @@ class BinaryLogisticRegression(object):
         # YOUR CODE HERE
         # convergence = False           # repetera ett fixt antal gånger eller tills konvergens
         # while not convergence:
-        minibatch = []
-        for i in range(100):
-            minibatch.append(random.randint(1, self.DATAPOINTS))
 
         for iterations in range(self.DATAPOINTS * 10):
-            curErr = 0
+            minibatch = random.sample(range(0, self.DATAPOINTS-1), 100)
+            # curErr = 0
             for k in range(self.FEATURES):
                 sum = 0
                 for i in minibatch:
                     sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
 
+                # sum -= self.theta[k]*0.5
                 self.gradient[k] = (1 / len(minibatch)) * sum
-                curErr += self.gradient[k] ** 2
+                # curErr += self.gradient[k] ** 2
 
-            self.update_plot(self.loss(self.x, self.y))
+            # self.update_plot(self.loss(self.x, self.y))
 
             # if curErr < self.CONVERGENCE_MARGIN:
             # convergence = True
+            print(self.loss(self.x, self.y))
 
             for k in range(self.FEATURES):
                 self.theta[k] = self.theta[k] - self.LEARNING_RATE * self.gradient[k]
@@ -192,13 +196,15 @@ class BinaryLogisticRegression(object):
             curErr = 0
             for k in range(self.FEATURES):
                 sum = 0
-                for i in range(1, self.DATAPOINTS):
+                for i in range(self.DATAPOINTS):
                     sum += self.x[i][k] * (self.sigmoid(np.dot(self.theta, self.x[i, :])) - self.y[i])
 
-                self.gradient[k] = sum
+                # sum -= self.theta[k]
+
+                self.gradient[k] = (1 / self.DATAPOINTS) * sum
                 curErr += self.gradient[k] ** 2
 
-            self.update_plot(self.loss(self.x, self.y))
+            # self.update_plot(self.loss(self.x, self.y))
 
             if curErr < self.CONVERGENCE_MARGIN:
                 convergence = True
