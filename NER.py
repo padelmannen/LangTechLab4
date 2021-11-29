@@ -3,7 +3,7 @@ import time
 import sys
 import codecs
 from BinaryLogisticRegression import BinaryLogisticRegression
-#blaj
+
 """
 This file is part of the computer assignments for the course DD1418/DD2418 Language engineering at KTH.
 Created 2017 by Johan Boye, Patrik Jonell and Dmytro Kalpakchi.
@@ -55,6 +55,12 @@ class NER(object):
 
     def first_token_in_sentence(self):
            return self.last_token in [None, '.', '!', '?']
+
+    def word_occured(self):
+        if self.current_token not in self.words:
+            self.words[self.current_token] = True
+            return False
+        return True
 
     class FeatureFunction(object):
         def __init__(self, func):
@@ -123,7 +129,7 @@ class NER(object):
         """
         Constructor. Trains and tests a NER model using binary logistic regression.
         """
-
+        self.words = {}
         self.current_token = None #  The token currently under consideration.
         self.last_token = None #  The token on the preceding line.
 
@@ -131,6 +137,7 @@ class NER(object):
         self.features = [
             NER.FeatureFunction(self.capitalized_token),
             NER.FeatureFunction(self.first_token_in_sentence),
+            NER.FeatureFunction(self.word_occured)
         ]
 
         if training_file:
